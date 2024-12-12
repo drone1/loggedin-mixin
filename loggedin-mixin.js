@@ -1,4 +1,5 @@
 /* global LoggedInMixin:true, Roles */
+
 LoggedInMixin = function(methodOptions) {
     check(methodOptions.checkLoggedInError, Match.ObjectIncluding({
         error: String,
@@ -13,7 +14,14 @@ LoggedInMixin = function(methodOptions) {
         if (!this.userId) {
             throw new Meteor.Error(..._.values(methodOptions.checkLoggedInError));
         };
-        // if app is using alanning:roles and method is declaring checkRoles 
+
+        if (methodOptions?.checkHasVerifiedEmail) {
+            // We need to manually look up the user
+            const user = await Meteor.users.findOneAsync({ _id: this.userId })
+            check(user.hasVerifiedEmail(), Boolean)
+        }
+
+        // if app is using alanning:roles and method is declaring checkRoles
         const checkRoles = methodOptions.checkRoles;
         if (rolesPackage && checkRoles) {
             // Empty roles are validated to false, undefined validated for true!
